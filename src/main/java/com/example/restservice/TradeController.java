@@ -37,7 +37,7 @@ public class TradeController {
         }
 
         PdfCreate pdfCreator = new PdfCreate();
-        pdfCreator.createPdf("jsonData",tradesString.toString());
+        pdfCreator.createPdf("jsonData.pdf",tradesString.toString());
 
         return trades;
     }
