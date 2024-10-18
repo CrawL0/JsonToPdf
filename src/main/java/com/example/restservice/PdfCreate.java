@@ -1,47 +1,84 @@
 package com.example.restservice;
 
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Font;
-import com.itextpdf.text.FontFactory;
-import com.itextpdf.text.Chunk;
-import com.itextpdf.text.BaseColor;
-import com.itextpdf.text.pdf.PdfWriter;
+import com.lowagie.text.DocumentException;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.templatemode.TemplateMode;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
+import org.xhtmlrenderer.pdf.ITextRenderer;
 
-import java.io.FileNotFoundException;
+import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class PdfCreate {
-    public void createPdf(String fileName,String pdfContent) {
-        // Create a new Document object
-        Document document = new Document();
+    private String userName;
+    private String timestamp;
 
-        try {
-            // Create a PdfWriter instance to write to the file
-            PdfWriter.getInstance(document, new FileOutputStream(fileName));
 
-            // Open the document to start writing content to it
-            document.open();
-
-            // Create a Font object to define the text's appearance
-            Font font = FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.BLACK);
-
-            // Create a Chunk object that represents the text content
-            Chunk chunk = new Chunk(pdfContent, font);
-
-            // Add the Chunk to the document
-            document.add(chunk);
-
-            System.out.println("PDF created successfully: " + fileName);
-        } catch (FileNotFoundException | DocumentException e) {
-            // Handle exceptions related to file operations and document processing
-            System.err.println("Error occurred while creating PDF: " + e.getMessage());
-        } finally {
-            // Ensure that the document is closed properly
-            if (document != null) {
-                document.close();
-            }
-        }
+    public void PdfCreate(String userName,String timestamp) throws IOException, DocumentException {
+        PdfCreate pdfCreator = new PdfCreate();
+        String html = pdfCreator.parseThymeleafTemplate(userName,timestamp);
+        pdfCreator.generatePdfFromHtml(html);
     }
 
+    public void generatePdfFromHtml(String html) throws IOException, DocumentException {
+        String outputFolder = System.getProperty("user.home") + File.separator + "thymeleaf.pdf";
+        OutputStream outputStream = new FileOutputStream(outputFolder);
+
+        ITextRenderer renderer = new ITextRenderer();
+        renderer.setDocumentFromString(html);
+        renderer.layout();
+        renderer.createPDF(outputStream);
+
+        outputStream.close();
+    }
+
+    private String parseThymeleafTemplate(String userName,String timestamp) {
+        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
+        templateResolver.setPrefix("templates/");  // Ensures it looks in the correct folder
+        templateResolver.setSuffix(".html");
+        templateResolver.setTemplateMode(TemplateMode.HTML);
+
+        TemplateEngine templateEngine = new TemplateEngine();
+        templateEngine.setTemplateResolver(templateResolver);
+
+        this.userName=userName;
+        this.timestamp=timestamp;
+
+        // Creating the context and populating it with JSON data
+        Context context = new Context();
+        context.setVariable("userName", userName);
+        context.setVariable("timestamp", timestamp);
+        context.setVariable("pdfTemplateName", "User Report");
+        context.setVariable("params", createParams());
+
+        return templateEngine.process("thymeleaf_template", context);
+    }
+
+    // Helper method to create the params object for Thymeleaf
+    private Map<String, Object> createParams() {
+        Map<String, Object> params = new HashMap<>();
+        params.put("label1", "Sample Label");
+
+        List<Map<String, String>> tableData = new ArrayList<>();
+        Map<String, String> row1 = new HashMap<>();
+        row1.put("col1", "Value 1");
+        row1.put("col2", "Value 2");
+        tableData.add(row1);
+
+        Map<String, String> row2 = new HashMap<>();
+        row2.put("col1", "Value 3");
+        row2.put("col2", "Value 4");
+        tableData.add(row2);
+
+        params.put("table1", tableData);
+
+        return params;
+    }
 }
