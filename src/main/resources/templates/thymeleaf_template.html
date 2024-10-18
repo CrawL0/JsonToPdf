@@ -1,0 +1,71 @@
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .header {
+            text-align: center;
+            color: green;
+            margin-bottom: 20px;
+        }
+        .info-section {
+            margin: 10px 0;
+            font-size: 14px;
+        }
+        .info-label {
+            font-weight: bold;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+<h3 class="header">
+    <span th:text="'Welcome to ' + ${pdfTemplateName} + '!'"></span>
+</h3>
+
+<div class="info-section">
+    <span class="info-label">User Name:</span>
+    <span th:text="${userName}"></span>
+</div>
+
+<div class="info-section">
+    <span class="info-label">Timestamp:</span>
+    <span th:text="${timestamp}"></span>
+</div>
+
+<div class="info-section">
+    <span class="info-label">Label 1:</span>
+    <span th:text="${params.label1}"></span>
+</div>
+
+<h4>Data Table</h4>
+<table>
+    <thead>
+    <tr>
+        <th>Column 1</th>
+        <th>Column 2</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="row : ${params.table1}">
+        <td th:text="${row.col1}"></td>
+        <td th:text="${row.col2}"></td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
