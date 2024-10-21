@@ -1,47 +1,34 @@
 package com.example.restservice;
 
-import com.itextpdf.text.Document;
-import com.itextpdf.text.DocumentException;
-import com.itextpdf.text.Font;
-import com.itextpdf.text.FontFactory;
-import com.itextpdf.text.Chunk;
-import com.itextpdf.text.BaseColor;
-import com.itextpdf.text.pdf.PdfWriter;
 
-import java.io.FileNotFoundException;
+import com.itextpdf.html2pdf.HtmlConverter;
+import org.springframework.stereotype.Service;
 import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.util.Map;
 
+@Service
 public class PdfCreate {
-    public void createPdf(String fileName,String pdfContent) {
-        // Create a new Document object
-        Document document = new Document();
+    public static void generatePdf(String templatePath, String outputPdfPath, Map<String, String> placeholders) throws IOException
+    {
+        System.out.println(placeholders.values());
+        String htmlContent = new String(Files.readAllBytes(Paths.get(templatePath)), StandardCharsets.UTF_8);
+        int j=0;
 
-        try {
-            // Create a PdfWriter instance to write to the file
-            PdfWriter.getInstance(document, new FileOutputStream(fileName));
-
-            // Open the document to start writing content to it
-            document.open();
-
-            // Create a Font object to define the text's appearance
-            Font font = FontFactory.getFont(FontFactory.COURIER, 16, BaseColor.BLACK);
-
-            // Create a Chunk object that represents the text content
-            Chunk chunk = new Chunk(pdfContent, font);
-
-            // Add the Chunk to the document
-            document.add(chunk);
-
-            System.out.println("PDF created successfully: " + fileName);
-        } catch (FileNotFoundException | DocumentException e) {
-            // Handle exceptions related to file operations and document processing
-            System.err.println("Error occurred while creating PDF: " + e.getMessage());
-        } finally {
-            // Ensure that the document is closed properly
-            if (document != null) {
-                document.close();
-            }
+        for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+           for (int i=1;i<placeholders.size()+1;i++) {
+               if (j<i) {
+                   htmlContent = htmlContent.replace("{{value"+i+"}}", entry.getValue());
+                   htmlContent = htmlContent.replace("||key"+i+"||", entry.getKey());
+                   j=i;
+                   break;
+               }
+           }
         }
-    }
 
+        HtmlConverter.convertToPdf(htmlContent, new FileOutputStream(outputPdfPath));
+    }
 }
